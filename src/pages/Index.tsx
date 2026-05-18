@@ -229,47 +229,64 @@ function LetterScreen({ onInvite }: { onInvite: () => void }) {
           </div>
         </div>
 
-        {/* Кнопка сердца */}
+        {/* Кнопка перехода */}
         <div ref={btnRef} style={{
           marginTop: '56px',
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '16px',
           opacity: allShown ? 1 : 0,
           transform: allShown ? 'translateY(0)' : 'translateY(24px)',
           transition: 'opacity 1.2s ease 0.5s, transform 1.2s ease 0.5s',
         }}>
+          {/* Подсказка */}
+          <p style={{
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: '11px',
+            letterSpacing: '0.25em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,150,150,0.55)',
+            animation: allShown ? 'pulse-hint 2s ease-in-out infinite' : 'none',
+          }}>
+            нажми ↓
+          </p>
+
           <button
             onClick={onInvite}
             style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              gap: '12px',
-              padding: '0',
+              gap: '14px',
+              background: 'linear-gradient(135deg, #c0392b, #e74c3c, #c0392b)',
+              backgroundSize: '200% 200%',
+              border: '1px solid rgba(255,100,100,0.4)',
+              borderRadius: '999px',
+              padding: '20px 44px',
+              cursor: 'pointer',
+              animation: allShown ? 'glow-btn 2.5s ease-in-out infinite' : 'none',
+              boxShadow: '0 0 32px rgba(220,50,50,0.5), 0 8px 32px rgba(0,0,0,0.4)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 48px rgba(220,50,50,0.8), 0 12px 40px rgba(0,0,0,0.5)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 32px rgba(220,50,50,0.5), 0 8px 32px rgba(0,0,0,0.4)';
             }}
           >
-            <span style={{
-              fontSize: 'clamp(48px, 12vw, 80px)',
-              lineHeight: 1,
-              filter: 'drop-shadow(0 0 24px rgba(220,40,40,0.7))',
-              animation: allShown ? 'heartbeat 1.5s ease-in-out infinite' : 'none',
-              display: 'block',
-            }}>
-              ❤️
-            </span>
+            <span style={{ fontSize: '24px', animation: allShown ? 'heartbeat 1.5s ease-in-out infinite' : 'none' }}>❤️</span>
             <span style={{
               fontFamily: "'Cormorant', serif",
-              fontSize: 'clamp(22px, 5vw, 32px)',
-              fontWeight: 400,
-              fontStyle: 'italic',
-              color: '#ff4444',
-              letterSpacing: '0.05em',
-              textShadow: '0 0 20px rgba(255,60,60,0.5)',
+              fontSize: 'clamp(20px, 4.5vw, 28px)',
+              fontWeight: 500,
+              color: 'white',
+              letterSpacing: '0.03em',
+              whiteSpace: 'nowrap',
             }}>
-              Я хочу тебя увидеть
+              Хочу тебя увидеть
             </span>
           </button>
         </div>
@@ -517,70 +534,72 @@ const STYLES = `
     42% { transform: scale(1.12); }
     56% { transform: scale(1); }
   }
+  @keyframes glow-btn {
+    0%, 100% { box-shadow: 0 0 32px rgba(220,50,50,0.5), 0 8px 32px rgba(0,0,0,0.4); }
+    50% { box-shadow: 0 0 60px rgba(220,50,50,0.9), 0 8px 40px rgba(0,0,0,0.5); }
+  }
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 0.4; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(4px); }
+  }
   html { scroll-behavior: smooth; }
 `;
 
-// ── Фоновый музыкальный плеер (YouTube iframe API) ──
-function MusicPlayer() {
+// ── Фоновый музыкальный плеер ──
+function MusicPlayer({ controlRef }: { controlRef: React.MutableRefObject<{ start: () => void; toggle: () => void }> }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
 
+  const start = () => {
+    const iframe = iframeRef.current;
+    if (!iframe || started) return;
+    iframe.src = iframe.src + '&autoplay=1';
+    setStarted(true);
+    setPlaying(true);
+  };
+
   const toggle = () => {
     const iframe = iframeRef.current;
     if (!iframe) return;
-    if (!started) {
-      // первый запуск
-      iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
-      setStarted(true);
-      setPlaying(true);
-    } else {
-      const msg = playing
-        ? '{"event":"command","func":"pauseVideo","args":""}'
-        : '{"event":"command","func":"playVideo","args":""}';
-      iframe.contentWindow?.postMessage(msg, '*');
-      setPlaying(!playing);
-    }
+    if (!started) { start(); return; }
+    const msg = playing
+      ? '{"event":"command","func":"pauseVideo","args":""}'
+      : '{"event":"command","func":"playVideo","args":""}';
+    iframe.contentWindow?.postMessage(msg, '*');
+    setPlaying(p => !p);
   };
+
+  useEffect(() => {
+    controlRef.current = { start, toggle };
+  });
 
   return (
     <>
-      {/* Скрытый iframe YouTube */}
       <iframe
         ref={iframeRef}
-        src="https://www.youtube.com/embed/videoseries?list=PLSearch&enablejsapi=1&autoplay=0&loop=1&controls=0&iv_load_policy=3&modestbranding=1&rel=0&origin=https://poehali.dev&listType=search&list=матранг+заманчивая"
+        src="https://www.youtube.com/embed/IHJZbAqlbvk?enablejsapi=1&autoplay=0&loop=1&playlist=IHJZbAqlbvk&controls=0&iv_load_policy=3&modestbranding=1&rel=0"
         style={{ display: 'none' }}
         allow="autoplay"
         title="music"
       />
-      {/* Кнопка */}
       <button
         onClick={toggle}
-        title={playing ? 'Пауза' : 'Играть'}
+        title={playing ? 'Пауза' : 'Музыка'}
         style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 9999,
-          width: '48px',
-          height: '48px',
-          borderRadius: '50%',
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+          width: '48px', height: '48px', borderRadius: '50%',
           background: 'rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.25)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          transition: 'transform 0.2s, background 0.2s',
+          backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.25)', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          transition: 'transform 0.2s',
         }}
         onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.1)'}
         onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1)'}
       >
-        {playing ? '⏸' : '▶️'}
+        {playing ? '⏸' : '🎵'}
       </button>
     </>
   );
@@ -590,19 +609,24 @@ type Screen = 'hero' | 'letter' | 'invite';
 
 export default function Index() {
   const [screen, setScreen] = useState<Screen>('hero');
-  const topRef = useRef<HTMLDivElement>(null);
+  const musicRef = useRef({ start: () => {}, toggle: () => {} });
 
   const goTo = (s: Screen) => {
     setScreen(s);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleRead = () => {
+    musicRef.current.start();
+    goTo('letter');
+  };
+
   return (
     <>
       <style>{STYLES}</style>
-      <MusicPlayer />
-      <div ref={topRef}>
-        {screen === 'hero' && <HeroScreen onRead={() => goTo('letter')} />}
+      <MusicPlayer controlRef={musicRef} />
+      <div>
+        {screen === 'hero' && <HeroScreen onRead={handleRead} />}
         {screen === 'letter' && <LetterScreen onInvite={() => goTo('invite')} />}
         {screen === 'invite' && <InviteScreen />}
       </div>
