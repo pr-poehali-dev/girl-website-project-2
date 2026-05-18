@@ -1,404 +1,476 @@
 import { useState, useEffect, useRef } from 'react';
 import Icon from '@/components/ui/icon';
 
-const IMAGES = {
-  hero: 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/be10d329-f2c9-4c6f-b4aa-f14c54502053.jpg',
-  gallery1: 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/cd847a8a-5d19-4505-b9e6-059639efe8c6.jpg',
-  gallery2: 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/13866e00-0dfc-4597-8e2d-98b5f8c91760.jpg',
-  gallery3: 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/be10d329-f2c9-4c6f-b4aa-f14c54502053.jpg',
-};
-
-const NAV_ITEMS = [
-  { id: 'home', label: 'Главная' },
-  { id: 'about', label: 'О нас' },
-  { id: 'gallery', label: 'Галерея' },
-  { id: 'history', label: 'История' },
-  { id: 'contacts', label: 'Контакты' },
-];
+const HERO_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/be10d329-f2c9-4c6f-b4aa-f14c54502053.jpg';
+const IMG2 = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/cd847a8a-5d19-4505-b9e6-059639efe8c6.jpg';
+const IMG3 = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/13866e00-0dfc-4597-8e2d-98b5f8c91760.jpg';
 
 const TIMELINE = [
-  { date: '14 февраля 2022', title: 'Первая встреча', desc: 'Тот самый день, когда всё изменилось. Взгляды встретились — и мир стал другим.' },
-  { date: '1 мая 2022', title: 'Первое путешествие', desc: 'Мы открыли для себя новые места и поняли: вдвоём любой маршрут становится приключением.' },
-  { date: '14 февраля 2023', title: 'Год вместе', desc: 'Первая годовщина. Столько воспоминаний, столько смеха и тепла.' },
-  { date: '2024', title: 'Наши планы', desc: 'Впереди — ещё больше путешествий, открытий и счастливых моментов вместе.' },
+  { date: '14 февраля 2022', title: 'Первая встреча', desc: 'Тот самый день, когда всё изменилось. Взгляды встретились — и мир стал другим.', emoji: '🌹' },
+  { date: '1 мая 2022', title: 'Первое путешествие', desc: 'Мы открыли для себя новые места и поняли: вдвоём любой маршрут — приключение.', emoji: '✈️' },
+  { date: '14 февраля 2023', title: 'Год вместе', desc: 'Первая годовщина. Столько воспоминаний, столько смеха и тепла.', emoji: '💌' },
+  { date: '2024', title: 'Наши планы', desc: 'Впереди — ещё больше путешествий, открытий и счастливых моментов вместе.', emoji: '🌸' },
 ];
 
-const GALLERY_ITEMS = [
-  { img: IMAGES.gallery1, label: 'Романтический вечер' },
-  { img: IMAGES.gallery2, label: 'Городские прогулки' },
-  { img: IMAGES.gallery3, label: 'Вместе' },
-  { img: IMAGES.hero, label: 'Наш портрет' },
+const GALLERY = [
+  { img: IMG2, label: 'Романтический вечер' },
+  { img: IMG3, label: 'Городские прогулки' },
+  { img: HERO_IMG, label: 'Наш портрет' },
+  { img: IMG2, label: 'Вместе' },
 ];
 
-function Stars() {
-  const stars = Array.from({ length: 60 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2.5 + 0.5,
-    delay: Math.random() * 4,
-    duration: Math.random() * 3 + 2,
-  }));
+const DOTS = Array.from({ length: 24 });
 
+// ─── Falling petals ───
+const PETALS = Array.from({ length: 14 }, (_, i) => ({
+  id: i,
+  left: `${5 + i * 6.5}%`,
+  size: 14 + Math.random() * 10,
+  duration: 8 + Math.random() * 7,
+  delay: Math.random() * 10,
+  rotate: Math.random() > 0.5,
+}));
+
+function Petals() {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {stars.map(star => (
+    <>
+      {PETALS.map(p => (
         <div
-          key={star.id}
-          className="star animate-twinkle"
+          key={p.id}
+          className="petal"
           style={{
-            left: `${star.x}%`,
-            top: `${star.y}%`,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            animationDelay: `${star.delay}s`,
-            animationDuration: `${star.duration}s`,
-            opacity: 0.3,
+            left: p.left,
+            fontSize: `${p.size}px`,
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
           }}
-        />
+        >
+          🌸
+        </div>
       ))}
-    </div>
+    </>
+  );
+}
+
+// ─── Section wrapper ───
+function Section({ id, children, className = '' }: { id: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section id={id} className={`relative z-10 py-28 px-6 ${className}`}>
+      <div className="max-w-5xl mx-auto">{children}</div>
+    </section>
+  );
+}
+
+function SectionLabel({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color, fontSize: '10px' }}>
+      — {children}
+    </p>
   );
 }
 
 export default function Index() {
-  const [activeSection, setActiveSection] = useState('home');
+  const [view, setView] = useState<'home' | 'main' | 'path'>('home');
+  const [btnXFlipped, setBtnXFlipped] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const audioUrl = 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bab.mp3';
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-
-      const sections = NAV_ITEMS.map(n => document.getElementById(n.id));
-      const scrollPos = window.scrollY + window.innerHeight / 2;
-
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = sections[i];
-        if (el && el.offsetTop <= scrollPos) {
-          setActiveSection(NAV_ITEMS[i].id);
-          break;
-        }
-      }
-
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
       document.querySelectorAll('.reveal').forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 80) {
+        if (el.getBoundingClientRect().top < window.innerHeight - 60) {
           el.classList.add('visible');
         }
       });
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Trigger reveal after view change
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight - 60) {
+          el.classList.add('visible');
+        }
+      });
+    }, 100);
+  }, [view]);
 
   const toggleMusic = () => {
     if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().catch(() => {});
-      setIsPlaying(true);
-    }
+    if (isPlaying) { audioRef.current.pause(); setIsPlaying(false); }
+    else { audioRef.current.play().catch(() => {}); setIsPlaying(true); }
   };
 
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-    setNavOpen(false);
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'var(--dark-bg)' }}>
-      <Stars />
+    <div className="relative min-h-screen" style={{ background: 'var(--cream)' }}>
+      <Petals />
 
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div style={{
-          position: 'absolute', top: '-20%', left: '-20%', width: '60%', height: '60%',
-          background: 'radial-gradient(circle, rgba(180,79,255,0.12) 0%, transparent 70%)',
-          filter: 'blur(40px)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-20%', right: '-20%', width: '60%', height: '60%',
-          background: 'radial-gradient(circle, rgba(255,45,120,0.1) 0%, transparent 70%)',
-          filter: 'blur(40px)',
-        }} />
+      {/* Soft blobs */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '50%', height: '50%', background: 'radial-gradient(circle, rgba(255,214,224,0.5) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', bottom: '10%', left: '-15%', width: '45%', height: '45%', background: 'radial-gradient(circle, rgba(255,179,198,0.35) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', top: '40%', left: '30%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(255,240,244,0.6) 0%, transparent 70%)', filter: 'blur(50px)' }} />
       </div>
 
       <audio ref={audioRef} loop>
-        <source src={audioUrl} type="audio/mpeg" />
+        <source src="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bab.mp3" type="audio/mpeg" />
       </audio>
 
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'glass' : ''}`}
-        style={{ paddingTop: scrolled ? '12px' : '20px', paddingBottom: scrolled ? '12px' : '20px', paddingLeft: '24px', paddingRight: '24px' }}>
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div onClick={() => scrollTo('home')} className="cursor-pointer">
-            <span className="gradient-text" style={{ fontFamily: "'Cormorant', serif", fontWeight: 600, fontSize: '22px' }}>
-              М&nbsp;&amp;&nbsp;А
-            </span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8">
-            {NAV_ITEMS.map(item => (
-              <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`nav-link transition-colors duration-300 ${
-                  activeSection === item.id ? 'active neon-text-violet' : 'text-white/60 hover:text-white'
-                }`}
-                style={{ fontFamily: "'Montserrat', sans-serif", letterSpacing: '0.1em', fontSize: '11px', textTransform: 'uppercase', fontWeight: 300 }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <button className="md:hidden text-white/70 hover:text-white transition-colors" onClick={() => setNavOpen(!navOpen)}>
-            <Icon name={navOpen ? 'X' : 'Menu'} size={22} />
+      {/* ── NAV ── */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'glass-white' : ''}`}
+        style={{ padding: scrolled ? '12px 24px' : '20px 24px' }}
+      >
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <button
+            onClick={() => { setView('home'); scrollToTop(); }}
+            style={{ fontFamily: "'Cormorant', serif", fontWeight: 600, fontSize: '22px', background: 'none', border: 'none', cursor: 'pointer' }}
+            className="rose-gradient-text"
+          >
+            М&nbsp;&amp;&nbsp;А
           </button>
-        </div>
-
-        {navOpen && (
-          <div className="md:hidden glass mt-4 mx-4 rounded-2xl p-6 flex flex-col gap-4">
-            {NAV_ITEMS.map(item => (
+          <div className="flex items-center gap-2">
+            {view !== 'home' && (
               <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
-                className={`text-left ${activeSection === item.id ? 'neon-text-violet' : 'text-white/70'}`}
-                style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                onClick={() => { setView('home'); scrollToTop(); }}
+                className="nav-link transition-colors duration-300"
+                style={{ fontFamily: "'Montserrat', sans-serif", letterSpacing: '0.1em', fontSize: '11px', textTransform: 'uppercase', fontWeight: 400, color: 'var(--rose-text)', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}
               >
-                {item.label}
+                ← Назад
               </button>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </nav>
 
-      {/* HERO */}
-      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img src={IMAGES.hero} alt="Hero" className="w-full h-full object-cover opacity-30" style={{ filter: 'saturate(0.8)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(8,8,15,0.3) 0%, rgba(8,8,15,0.6) 60%, rgba(8,8,15,1) 100%)' }} />
-        </div>
+      {/* ════════════════════════════
+          HOME VIEW
+      ════════════════════════════ */}
+      {view === 'home' && (
+        <div>
+          {/* HERO — full screen photo fading into buttons */}
+          <div className="relative w-full" style={{ minHeight: '100vh' }}>
+            {/* Photo */}
+            <div className="sticky top-0 w-full" style={{ height: '100vh', zIndex: 0 }}>
+              <img
+                src={HERO_IMG}
+                alt="Главное фото"
+                className="w-full h-full object-cover"
+                style={{ filter: 'saturate(0.85) brightness(0.95)' }}
+              />
+              {/* Gradient fade bottom — photo dissolves into cream */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(255,250,249,0) 0%, rgba(255,250,249,0) 40%, rgba(255,250,249,0.6) 65%, rgba(255,250,249,1) 100%)',
+                }}
+              />
+              {/* Subtle top overlay for nav readability */}
+              <div className="absolute top-0 left-0 right-0" style={{ height: '120px', background: 'linear-gradient(to bottom, rgba(255,250,249,0.3), transparent)' }} />
+            </div>
 
-        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-          <p className="animate-fadeInUp delay-100 text-sm tracking-[0.4em] uppercase mb-4"
-            style={{ color: 'var(--neon-teal)', fontFamily: "'Montserrat', sans-serif", opacity: 0, fontSize: '11px' }}>
-            ❤ Добро пожаловать ❤
-          </p>
-
-          <h1 className="animate-fadeInUp delay-200 mb-6" style={{
-            fontFamily: "'Cormorant', serif",
-            fontSize: 'clamp(52px, 10vw, 100px)',
-            fontWeight: 300,
-            lineHeight: 1.05,
-            letterSpacing: '-0.02em',
-            opacity: 0,
-          }}>
-            <span className="gradient-text animate-gradient">Наша</span>
-            <br />
-            <span style={{ color: 'white' }}>История</span>
-          </h1>
-
-          <p className="animate-fadeInUp delay-400 font-light text-white/60 max-w-md mx-auto mb-10" style={{ opacity: 0, fontSize: '15px' }}>
-            Страница, где живут наши самые тёплые воспоминания, моменты и чувства
-          </p>
-
-          <div className="animate-fadeInUp delay-600 flex flex-col sm:flex-row gap-4 justify-center" style={{ opacity: 0 }}>
-            <button
-              onClick={() => scrollTo('about')}
-              className="px-8 py-3 rounded-full font-medium transition-all duration-300 hover:scale-105 text-white"
-              style={{
-                background: 'linear-gradient(135deg, var(--neon-pink), var(--neon-violet))',
-                boxShadow: '0 0 30px rgba(180,79,255,0.4)',
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: '11px',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-              }}
+            {/* Content overlaid on bottom of hero */}
+            <div
+              className="absolute bottom-0 left-0 right-0 z-10 text-center"
+              style={{ paddingBottom: '48px' }}
             >
-              Узнать нас
-            </button>
-            <button
-              onClick={() => scrollTo('gallery')}
-              className="px-8 py-3 rounded-full font-medium transition-all duration-300 hover:scale-105"
-              style={{
-                border: '1px solid rgba(180,79,255,0.4)',
-                color: 'rgba(255,255,255,0.8)',
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: '11px',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Галерея
-            </button>
+              {/* Names */}
+              <h1
+                className="animate-fadeInUp"
+                style={{
+                  fontFamily: "'Cormorant', serif",
+                  fontSize: 'clamp(56px, 12vw, 120px)',
+                  fontWeight: 300,
+                  lineHeight: 1,
+                  letterSpacing: '-0.02em',
+                  color: 'white',
+                  textShadow: '0 2px 40px rgba(100,20,30,0.25)',
+                  marginBottom: '8px',
+                  opacity: 0,
+                }}
+              >
+                М&nbsp;&amp;&nbsp;А
+              </h1>
+              <p
+                className="animate-fadeInUp delay-200"
+                style={{
+                  fontFamily: "'Cormorant', serif",
+                  fontSize: 'clamp(14px, 3vw, 20px)',
+                  fontWeight: 300,
+                  color: 'rgba(255,255,255,0.85)',
+                  letterSpacing: '0.15em',
+                  textShadow: '0 1px 12px rgba(100,20,30,0.3)',
+                  marginBottom: '8px',
+                  opacity: 0,
+                }}
+              >
+                наша история
+              </p>
+            </div>
+          </div>
+
+          {/* BUTTONS SECTION — appears after photo fades */}
+          <div
+            className="relative z-10"
+            style={{
+              background: 'var(--cream)',
+              paddingTop: '20px',
+              paddingBottom: '80px',
+              paddingLeft: '24px',
+              paddingRight: '24px',
+            }}
+          >
+            <div className="max-w-sm mx-auto flex flex-col gap-4 items-center">
+
+              {/* ── Кнопка 1: ГЛАВНАЯ ── */}
+              <button
+                onClick={() => setView('main')}
+                className="animate-fadeInUp delay-300 w-full glass-rose rounded-2xl transition-all duration-300 hover:scale-[1.03] active:scale-95 text-left"
+                style={{
+                  opacity: 0,
+                  padding: '20px 24px',
+                  border: '1px solid rgba(255,179,198,0.5)',
+                  boxShadow: '0 4px 20px rgba(232,103,122,0.1)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--rose-main)', marginBottom: '4px' }}>
+                      ✦ раздел
+                    </p>
+                    <p style={{ fontFamily: "'Cormorant', serif", fontSize: '26px', fontWeight: 400, color: 'var(--rose-text)' }}>
+                      Главная
+                    </p>
+                  </div>
+                  <Icon name="Heart" size={20} style={{ color: 'var(--rose-mid)' }} />
+                </div>
+              </button>
+
+              {/* ── Кнопка 2: НАШ ПУТЬ ── */}
+              <button
+                onClick={() => setView('path')}
+                className="animate-fadeInUp delay-500 w-full glass-rose rounded-2xl transition-all duration-300 hover:scale-[1.03] active:scale-95 text-left"
+                style={{
+                  opacity: 0,
+                  padding: '20px 24px',
+                  border: '1px solid rgba(255,179,198,0.5)',
+                  boxShadow: '0 4px 20px rgba(232,103,122,0.1)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--rose-main)', marginBottom: '4px' }}>
+                      ✦ раздел
+                    </p>
+                    <p style={{ fontFamily: "'Cormorant', serif", fontSize: '26px', fontWeight: 400, color: 'var(--rose-text)' }}>
+                      Наш путь
+                    </p>
+                  </div>
+                  <Icon name="Map" size={20} style={{ color: 'var(--rose-mid)' }} />
+                </div>
+              </button>
+
+              {/* ── Кнопка 3: КНОПКА Х (большая, главная) ── */}
+              <button
+                onClick={() => setBtnXFlipped(f => !f)}
+                className="animate-fadeInUp delay-700 w-full rounded-3xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] animate-breathe relative overflow-hidden"
+                style={{
+                  opacity: 0,
+                  padding: '32px 28px',
+                  background: 'linear-gradient(135deg, var(--rose-main) 0%, var(--rose-deep) 100%)',
+                  boxShadow: '0 8px 32px rgba(232,103,122,0.35)',
+                  minHeight: '130px',
+                  perspective: '800px',
+                }}
+              >
+                {/* Shimmer layer */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 3s ease-in-out infinite',
+                  pointerEvents: 'none',
+                }} />
+
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="text-left">
+                    <div className="animate-heartbeat mb-2" style={{ display: 'inline-block', fontSize: '28px' }}>💝</div>
+                    <div key={String(btnXFlipped)} className="btn-x-text">
+                      {!btnXFlipped ? (
+                        <>
+                          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', marginBottom: '4px' }}>
+                            ✦ особое
+                          </p>
+                          <p style={{ fontFamily: "'Cormorant', serif", fontSize: '32px', fontWeight: 400, color: 'white', lineHeight: 1.1 }}>
+                            Кнопка Х
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', marginBottom: '6px' }}>
+                            ✦ скоро здесь будет
+                          </p>
+                          <p style={{ fontFamily: "'Cormorant', serif", fontSize: '22px', fontWeight: 300, color: 'white', lineHeight: 1.4, fontStyle: 'italic' }}>
+                            Что-то очень важное для нас двоих…
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <Icon name="Sparkles" size={28} style={{ color: 'rgba(255,255,255,0.6)', flexShrink: 0, marginLeft: '12px' }} />
+                </div>
+              </button>
+
+              {/* Hint */}
+              <p className="animate-fadeInUp delay-900 text-center" style={{ opacity: 0, fontSize: '11px', color: 'var(--rose-main)', letterSpacing: '0.1em', marginTop: '4px' }}>
+                нажми на кнопку Х ✦
+              </p>
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float opacity-50">
-          <Icon name="ChevronDown" size={24} className="text-white/50" />
-        </div>
-      </section>
-
-      {/* ABOUT */}
-      <section id="about" className="relative z-10 py-32 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="reveal grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'var(--neon-violet)', fontSize: '10px' }}>
-                — О нас
-              </p>
-              <h2 style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 300, lineHeight: 1.15, color: 'white', marginBottom: '24px' }}>
-                Двое, которые<br />
-                <em style={{ color: 'var(--neon-pink)', fontStyle: 'italic' }}>нашли друг друга</em>
+      {/* ════════════════════════════
+          MAIN VIEW (Главная — точки-заглушки)
+      ════════════════════════════ */}
+      {view === 'main' && (
+        <div style={{ paddingTop: '80px' }}>
+          <Section id="main-content">
+            <div className="reveal text-center mb-16">
+              <SectionLabel color="var(--rose-main)">Главная</SectionLabel>
+              <h2 style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(38px, 7vw, 68px)', fontWeight: 300, color: 'var(--rose-text)', lineHeight: 1.1 }}>
+                Наша <em style={{ fontStyle: 'italic', color: 'var(--rose-main)' }}>история</em>
               </h2>
-              <p className="text-white/60 font-light leading-relaxed mb-6" style={{ fontSize: '15px' }}>
-                Мы — Маша и Антон. Встретились случайно, а оказалось — судьба. Вместе мы открываем мир, смеёмся над мелочами и создаём моменты, которые останутся с нами навсегда.
+              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', color: 'var(--rose-main)', opacity: 0.6, marginTop: '12px', letterSpacing: '0.1em' }}>
+                — здесь скоро появится ваш рассказ —
               </p>
-              <p className="text-white/50 font-light leading-relaxed" style={{ fontSize: '15px' }}>
-                Эта страница — наш маленький цифровой альбом. Здесь мы собираем всё самое важное: фотографии, истории, даты, которые изменили нашу жизнь.
-              </p>
+            </div>
 
-              <div className="grid grid-cols-3 gap-4 mt-10">
-                {[{ num: '2+', label: 'Года вместе' }, { num: '12', label: 'Путешествий' }, { num: '∞', label: 'Планов' }].map(stat => (
-                  <div key={stat.label} className="glass-violet rounded-2xl p-4 text-center">
-                    <div className="gradient-text mb-1" style={{ fontFamily: "'Cormorant', serif", fontSize: '32px', fontWeight: 300 }}>{stat.num}</div>
-                    <div className="text-white/50 text-xs tracking-wider">{stat.label}</div>
+            {/* Dot placeholders */}
+            <div className="reveal">
+              <div className="glass-rose rounded-3xl p-10 md:p-14 mb-6" style={{ border: '1px solid rgba(255,179,198,0.4)' }}>
+                <div className="dot-grid flex flex-wrap gap-3 justify-center mb-8">
+                  {DOTS.map((_, i) => (
+                    <span key={i} style={{ animationDelay: `${i * 0.04}s` }} />
+                  ))}
+                </div>
+                <div className="space-y-4">
+                  {[80, 65, 90, 55, 75].map((w, i) => (
+                    <div
+                      key={i}
+                      className="rounded-full"
+                      style={{
+                        height: '10px',
+                        width: `${w}%`,
+                        background: 'linear-gradient(90deg, var(--rose-soft), var(--rose-mid))',
+                        opacity: 0.5 + i * 0.05,
+                        animationDelay: `${i * 0.1}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <p className="text-center mt-8" style={{ fontFamily: "'Cormorant', serif", fontSize: '20px', fontStyle: 'italic', color: 'var(--rose-main)', opacity: 0.7 }}>
+                  Скоро здесь появится ваш текст…
+                </p>
+              </div>
+
+              {/* Photo preview */}
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                {GALLERY.slice(0, 4).map((item, i) => (
+                  <div key={i} className="gallery-item" style={{ height: '200px' }}>
+                    <img src={item.img} alt={item.label} className="w-full h-full object-cover" />
+                    <div className="gallery-overlay">
+                      <span className="text-white font-light text-sm" style={{ fontFamily: "'Cormorant', serif" }}>{item.label}</span>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+          </Section>
+        </div>
+      )}
 
-            <div className="relative">
-              <div className="relative rounded-3xl overflow-hidden" style={{ height: '480px', border: '1px solid rgba(180,79,255,0.2)' }}>
-                <img src={IMAGES.hero} alt="О нас" className="w-full h-full object-cover" style={{ filter: 'saturate(0.9)' }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,8,15,0.5) 0%, transparent 60%)' }} />
-              </div>
-              <div className="absolute -bottom-6 -left-6 glass-violet rounded-2xl px-6 py-4 animate-float" style={{ animationDelay: '1s' }}>
-                <div className="text-sm text-white/80 font-light">💜 С любовью, каждый день</div>
-              </div>
+      {/* ════════════════════════════
+          PATH VIEW (Наш путь — таймлайн)
+      ════════════════════════════ */}
+      {view === 'path' && (
+        <div style={{ paddingTop: '80px' }}>
+          <Section id="path-content">
+            <div className="reveal text-center mb-16">
+              <SectionLabel color="var(--rose-main)">Наш путь</SectionLabel>
+              <h2 style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(38px, 7vw, 68px)', fontWeight: 300, color: 'var(--rose-text)', lineHeight: 1.1 }}>
+                Шаг за <em style={{ fontStyle: 'italic', color: 'var(--rose-main)' }}>шагом</em>
+              </h2>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* GALLERY */}
-      <section id="gallery" className="relative z-10 py-32 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="reveal text-center mb-16">
-            <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'var(--neon-teal)', fontSize: '10px' }}>— Галерея</p>
-            <h2 style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 300, color: 'white' }}>
-              Наши <em className="gradient-text" style={{ fontStyle: 'italic' }}>моменты</em>
-            </h2>
-          </div>
-
-          <div className="reveal grid grid-cols-2 md:grid-cols-4 gap-4">
-            {GALLERY_ITEMS.map((item, i) => (
-              <div
-                key={i}
-                className={`gallery-item ${i === 0 ? 'col-span-2 row-span-2' : ''}`}
-                style={{ height: i === 0 ? '400px' : '190px' }}
-              >
-                <img src={item.img} alt={item.label} className="w-full h-full object-cover" />
-                <div className="gallery-overlay">
-                  <span className="text-white font-light text-sm" style={{ fontFamily: "'Cormorant', serif" }}>{item.label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HISTORY */}
-      <section id="history" className="relative z-10 py-32 px-6">
-        <div className="max-w-3xl mx-auto">
-          <div className="reveal text-center mb-20">
-            <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'var(--neon-pink)', fontSize: '10px' }}>— История</p>
-            <h2 style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(36px, 6vw, 64px)', fontWeight: 300, color: 'white' }}>
-              Наш <em className="gradient-text" style={{ fontStyle: 'italic' }}>путь</em>
-            </h2>
-          </div>
-
-          <div className="reveal space-y-10">
-            {TIMELINE.map((item, i) => (
-              <div key={i} className="timeline-item">
-                <div className="timeline-dot" />
-                <div className="glass-violet rounded-2xl p-6 ml-4">
-                  <p className="tracking-widest uppercase mb-2" style={{ color: 'var(--neon-teal)', fontSize: '10px', letterSpacing: '0.2em' }}>{item.date}</p>
-                  <h3 className="text-white font-light mb-3" style={{ fontFamily: "'Cormorant', serif", fontSize: '22px' }}>{item.title}</h3>
-                  <p className="text-white/60 font-light leading-relaxed" style={{ fontSize: '14px' }}>{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CONTACTS */}
-      <section id="contacts" className="relative z-10 py-32 px-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="reveal glass rounded-3xl p-10 md:p-14 text-center" style={{ border: '1px solid rgba(180,79,255,0.2)' }}>
-            <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: 'var(--neon-violet)', fontSize: '10px' }}>— Контакты</p>
-            <h2 className="mb-6" style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(32px, 5vw, 54px)', fontWeight: 300, color: 'white' }}>
-              Свяжитесь с нами
-            </h2>
-            <p className="text-white/50 font-light mb-10" style={{ fontSize: '15px', lineHeight: 1.7 }}>
-              Хотите познакомиться? Просто напишите — мы всегда рады общению.
-            </p>
-
-            <div className="space-y-4">
-              {[
-                { icon: 'Instagram', label: '@masha_i_anton', href: '#' },
-                { icon: 'Mail', label: 'hello@example.com', href: 'mailto:hello@example.com' },
-                { icon: 'MessageCircle', label: 'Telegram', href: '#' },
-              ].map(contact => (
-                <a
-                  key={contact.label}
-                  href={contact.href}
-                  className="flex items-center gap-4 glass rounded-2xl px-6 py-4 transition-all duration-300 hover:scale-[1.02] group"
-                  style={{ border: '1px solid rgba(180,79,255,0.15)', textDecoration: 'none' }}
-                >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, var(--neon-pink), var(--neon-violet))' }}>
-                    <Icon name={contact.icon} size={18} className="text-white" />
+            <div className="reveal space-y-10 max-w-2xl mx-auto">
+              {TIMELINE.map((item, i) => (
+                <div key={i} className="timeline-item">
+                  <div className="timeline-dot">{item.emoji}</div>
+                  <div
+                    className="glass-rose rounded-2xl p-6 ml-4"
+                    style={{ border: '1px solid rgba(255,179,198,0.4)', boxShadow: '0 4px 20px rgba(232,103,122,0.07)' }}
+                  >
+                    <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--rose-main)', marginBottom: '6px' }}>
+                      {item.date}
+                    </p>
+                    <h3 style={{ fontFamily: "'Cormorant', serif", fontSize: '24px', fontWeight: 400, color: 'var(--rose-text)', marginBottom: '8px' }}>
+                      {item.title}
+                    </h3>
+                    <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '14px', color: 'var(--rose-text)', opacity: 0.7, lineHeight: 1.7, fontWeight: 300 }}>
+                      {item.desc}
+                    </p>
                   </div>
-                  <span className="text-white/80 font-light group-hover:text-white transition-colors">{contact.label}</span>
-                  <Icon name="ArrowRight" size={16} className="ml-auto text-white/30 group-hover:text-white/60 transition-colors" />
-                </a>
+                </div>
               ))}
             </div>
-          </div>
+
+            {/* Quote at bottom */}
+            <div className="reveal text-center mt-20">
+              <div className="glass-rose rounded-3xl px-10 py-10 inline-block" style={{ border: '1px solid rgba(255,179,198,0.4)' }}>
+                <div className="animate-float" style={{ fontSize: '36px', marginBottom: '12px' }}>🌹</div>
+                <p style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(18px, 3vw, 26px)', fontWeight: 300, fontStyle: 'italic', color: 'var(--rose-text)', lineHeight: 1.5 }}>
+                  «Каждый момент с тобой — мой любимый»
+                </p>
+              </div>
+            </div>
+          </Section>
         </div>
-      </section>
+      )}
 
       {/* Footer */}
       <footer className="relative z-10 text-center py-10 px-6">
-        <div className="h-px max-w-xl mx-auto mb-8" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,79,255,0.3), transparent)' }} />
-        <p className="text-white/30 font-light" style={{ fontFamily: "'Cormorant', serif", fontSize: '16px' }}>
-          Сделано с любовью 💜 2024
+        <div className="h-px max-w-xs mx-auto mb-6" style={{ background: 'linear-gradient(90deg, transparent, var(--rose-mid), transparent)' }} />
+        <p style={{ fontFamily: "'Cormorant', serif", fontSize: '16px', color: 'var(--rose-main)', opacity: 0.6 }}>
+          Сделано с любовью 🌸
         </p>
       </footer>
 
-      {/* Music button */}
+      {/* Music btn */}
       <button onClick={toggleMusic} className={`music-btn ${isPlaying ? 'playing' : ''}`} title={isPlaying ? 'Выключить музыку' : 'Включить музыку'}>
-        <Icon name={isPlaying ? 'Music' : 'Music2'} size={22} className="text-white" />
+        <Icon name={isPlaying ? 'Music' : 'Music2'} size={20} className="text-white" />
       </button>
 
       {isPlaying && (
-        <div className="fixed bottom-24 right-4 glass rounded-full px-4 py-2 text-xs text-white/60 flex items-center gap-2 animate-fadeIn"
-          style={{ border: '1px solid rgba(180,79,255,0.2)' }}>
+        <div
+          className="fixed bottom-24 right-4 glass-white rounded-full px-4 py-2 flex items-center gap-2 animate-fadeIn"
+          style={{ fontSize: '11px', color: 'var(--rose-main)', border: '1px solid rgba(255,179,198,0.4)' }}
+        >
           <div className="flex items-end gap-0.5" style={{ height: '14px' }}>
             {[8, 14, 6, 12].map((h, b) => (
-              <div key={b} className="w-0.5 bg-violet-400 rounded-full animate-pulse"
-                style={{ height: `${h}px`, animationDelay: `${b * 0.1}s`, animationDuration: `${0.6 + b * 0.1}s` }} />
+              <div
+                key={b}
+                className="rounded-full animate-pulse"
+                style={{ width: '2px', height: `${h}px`, background: 'var(--rose-main)', animationDelay: `${b * 0.12}s`, animationDuration: `${0.6 + b * 0.1}s` }}
+              />
             ))}
           </div>
           Играет музыка
