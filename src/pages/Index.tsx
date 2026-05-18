@@ -182,7 +182,7 @@ const LETTER_LINES = [
   { text: 'как всё началось…', type: 'end' },
 ];
 
-function MainView() {
+function MainView({ onGoPath }: { onGoPath: () => void }) {
   const [visibleLines, setVisibleLines] = useState<number[]>([]);
 
   useEffect(() => {
@@ -311,6 +311,48 @@ function MainView() {
             <p style={{ fontFamily: "'Cormorant', serif", fontSize: '20px', fontStyle: 'italic', color: 'var(--rose-main)' }}>
               Твой 🌸
             </p>
+          </div>
+
+          {/* Кнопка перехода — появляется после подписи */}
+          <div style={{
+            marginTop: '32px',
+            display: 'flex',
+            justifyContent: 'center',
+            opacity: visibleLines.includes(LETTER_LINES.length - 1) ? 1 : 0,
+            transform: visibleLines.includes(LETTER_LINES.length - 1) ? 'translateY(0)' : 'translateY(16px)',
+            transition: 'opacity 1s ease 1.2s, transform 1s ease 1.2s',
+          }}>
+            <button
+              onClick={onGoPath}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                background: 'linear-gradient(135deg, var(--rose-main), var(--rose-deep))',
+                color: 'white',
+                border: 'none',
+                borderRadius: '999px',
+                padding: '14px 32px',
+                cursor: 'pointer',
+                fontFamily: "'Montserrat', sans-serif",
+                fontSize: '12px',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                boxShadow: '0 8px 28px rgba(232,103,122,0.35)',
+                transition: 'transform 0.25s, box-shadow 0.25s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 36px rgba(232,103,122,0.5)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(232,103,122,0.35)';
+              }}
+            >
+              Наш путь
+              <span style={{ fontSize: '16px' }}>→</span>
+            </button>
           </div>
         </div>
 
@@ -661,7 +703,7 @@ export default function Index() {
       {/* ══════════════════════════════
            MAIN VIEW
       ══════════════════════════════ */}
-      {view === 'main' && <MainView />}
+      {view === 'main' && <MainView onGoPath={() => setView('path')} />}
 
       {/* ══════════════════════════════
            PATH VIEW
