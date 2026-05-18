@@ -19,8 +19,6 @@ const GALLERY = [
   { img: IMG2, label: 'Вместе' },
 ];
 
-const DOTS = Array.from({ length: 24 });
-
 // Точки на карте — замените на свои координаты
 const MAP_POINTS = [
   { x: 52, y: 38, label: 'Первая встреча', emoji: '🌹', desc: 'Москва' },
@@ -170,6 +168,169 @@ function LoveMap() {
             нажми на точку ✦
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Строки письма — появляются одна за другой ───
+const LETTER_LINES = [
+  { text: 'Дорогая,', type: 'greeting' },
+  { text: 'я знаю, что наша история не такая долгая,', type: 'body' },
+  { text: 'но я хочу сделать всё, чтобы она длилась вечность.', type: 'body' },
+  { text: 'Хочу просто вспомнить с тобой,', type: 'body' },
+  { text: 'как всё началось…', type: 'end' },
+];
+
+function MainView() {
+  const [visibleLines, setVisibleLines] = useState<number[]>([]);
+
+  useEffect(() => {
+    setVisibleLines([]);
+    LETTER_LINES.forEach((_, i) => {
+      setTimeout(() => {
+        setVisibleLines(prev => [...prev, i]);
+      }, 400 + i * 700);
+    });
+  }, []);
+
+  return (
+    <div style={{ paddingTop: '80px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '60px 24px' }}>
+
+        {/* Декоративный верх */}
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <div
+            className="animate-float"
+            style={{ fontSize: '42px', display: 'inline-block', marginBottom: '20px' }}
+          >
+            🌹
+          </div>
+          <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, var(--rose-mid), transparent)', marginBottom: '20px' }} />
+          <p style={{
+            fontFamily: "'Montserrat', sans-serif",
+            fontSize: '10px',
+            letterSpacing: '0.35em',
+            textTransform: 'uppercase',
+            color: 'var(--rose-main)',
+            opacity: 0.6,
+          }}>
+            ✦ главная
+          </p>
+        </div>
+
+        {/* Карточка письма */}
+        <div style={{
+          background: 'white',
+          borderRadius: '28px',
+          padding: '48px 40px 56px',
+          boxShadow: '0 16px 64px rgba(232,103,122,0.13)',
+          border: '1px solid rgba(255,179,198,0.35)',
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: '320px',
+        }}>
+          {/* Цветная полоска сверху */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: '5px',
+            background: 'linear-gradient(90deg, var(--rose-soft), var(--rose-main), var(--rose-soft))',
+          }} />
+
+          {/* Декоративные линии в стиле нотной бумаги */}
+          {[0, 1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} style={{
+              position: 'absolute',
+              left: '40px', right: '40px',
+              top: `${100 + i * 54}px`,
+              height: '1px',
+              background: 'rgba(255,179,198,0.18)',
+              pointerEvents: 'none',
+            }} />
+          ))}
+
+          {/* Текст письма */}
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '22px' }}>
+            {LETTER_LINES.map((line, i) => (
+              <div
+                key={i}
+                style={{
+                  opacity: visibleLines.includes(i) ? 1 : 0,
+                  transform: visibleLines.includes(i) ? 'translateY(0)' : 'translateY(16px)',
+                  transition: 'opacity 0.8s cubic-bezier(.22,.68,0,1.2), transform 0.8s cubic-bezier(.22,.68,0,1.2)',
+                }}
+              >
+                {line.type === 'greeting' ? (
+                  <p style={{
+                    fontFamily: "'Cormorant', serif",
+                    fontSize: 'clamp(28px, 6vw, 40px)',
+                    fontWeight: 400,
+                    fontStyle: 'italic',
+                    color: 'var(--rose-deep)',
+                    lineHeight: 1.2,
+                    marginBottom: '8px',
+                  }}>
+                    {line.text}
+                  </p>
+                ) : line.type === 'end' ? (
+                  <p style={{
+                    fontFamily: "'Cormorant', serif",
+                    fontSize: 'clamp(20px, 4vw, 28px)',
+                    fontWeight: 300,
+                    fontStyle: 'italic',
+                    color: 'var(--rose-main)',
+                    lineHeight: 1.5,
+                    marginTop: '8px',
+                  }}>
+                    {line.text}
+                  </p>
+                ) : (
+                  <p style={{
+                    fontFamily: "'Cormorant', serif",
+                    fontSize: 'clamp(18px, 3.5vw, 24px)',
+                    fontWeight: 300,
+                    color: 'var(--rose-text)',
+                    lineHeight: 1.6,
+                    opacity: 0.85,
+                  }}>
+                    {line.text}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Подпись — появляется последней */}
+          <div style={{
+            marginTop: '40px',
+            borderTop: '1px dashed rgba(255,179,198,0.4)',
+            paddingTop: '20px',
+            textAlign: 'right',
+            opacity: visibleLines.includes(LETTER_LINES.length - 1) ? 1 : 0,
+            transition: 'opacity 1.2s ease 0.4s',
+          }}>
+            <p style={{ fontFamily: "'Cormorant', serif", fontSize: '20px', fontStyle: 'italic', color: 'var(--rose-main)' }}>
+              Твой 🌸
+            </p>
+          </div>
+        </div>
+
+        {/* Мягкое свечение снизу */}
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            opacity: visibleLines.includes(LETTER_LINES.length - 1) ? 0.55 : 0,
+            transition: 'opacity 1.5s ease 1s',
+          }}>
+            <div style={{ width: '30px', height: '1px', background: 'var(--rose-mid)' }} />
+            <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '10px', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--rose-main)' }}>
+              наша история
+            </p>
+            <div style={{ width: '30px', height: '1px', background: 'var(--rose-mid)' }} />
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -500,54 +661,7 @@ export default function Index() {
       {/* ══════════════════════════════
            MAIN VIEW
       ══════════════════════════════ */}
-      {view === 'main' && (
-        <div style={{ paddingTop: '80px' }}>
-          <Section id="main-content">
-            <div className="reveal text-center" style={{ marginBottom: '40px' }}>
-              <SectionLabel color="var(--rose-main)">Главная</SectionLabel>
-              <h2 style={{ fontFamily: "'Cormorant', serif", fontSize: 'clamp(38px, 7vw, 68px)', fontWeight: 300, color: 'var(--rose-text)', lineHeight: 1.1 }}>
-                Наша <em style={{ fontStyle: 'italic', color: 'var(--rose-main)' }}>история</em>
-              </h2>
-              <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '13px', color: 'var(--rose-main)', opacity: 0.55, marginTop: '12px', letterSpacing: '0.1em' }}>
-                — здесь скоро появится ваш рассказ —
-              </p>
-            </div>
-
-            <div className="reveal">
-              <div className="glass-rose rounded-3xl" style={{ padding: '40px', border: '1px solid rgba(255,179,198,0.4)', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginBottom: '32px' }}>
-                  {DOTS.map((_, i) => (
-                    <div
-                      key={i}
-                      className="dot-grid"
-                      style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--rose-mid)', opacity: 0.4 + (i % 5) * 0.1 }}
-                    />
-                  ))}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {[80, 65, 90, 55, 75].map((w, i) => (
-                    <div key={i} style={{ height: '10px', width: `${w}%`, borderRadius: '9999px', background: 'linear-gradient(90deg, var(--rose-soft), var(--rose-mid))', opacity: 0.4 + i * 0.07 }} />
-                  ))}
-                </div>
-                <p style={{ fontFamily: "'Cormorant', serif", fontSize: '22px', fontStyle: 'italic', color: 'var(--rose-main)', opacity: 0.65, textAlign: 'center', marginTop: '28px' }}>
-                  Скоро здесь появится ваш текст…
-                </p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {GALLERY.slice(0, 4).map((item, i) => (
-                  <div key={i} className="gallery-item" style={{ height: '200px' }}>
-                    <img src={item.img} alt={item.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div className="gallery-overlay">
-                      <span style={{ color: 'white', fontFamily: "'Cormorant', serif", fontSize: '16px' }}>{item.label}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Section>
-        </div>
-      )}
+      {view === 'main' && <MainView />}
 
       {/* ══════════════════════════════
            PATH VIEW
