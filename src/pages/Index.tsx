@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 const SEA_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/156b9e86-9a69-47b2-9a98-c02d716abc79.jpg';
-const HERO_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/be10d329-f2c9-4c6f-b4aa-f14c54502053.jpg';
+const HERO_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/bucket/8a606346-8b27-4703-8122-210187e72d29.png';
 
 // Целевая дата встречи: 21 мая 2026, 20:30
 const TARGET_DATE = new Date('2026-05-21T20:30:00');
@@ -520,6 +520,72 @@ const STYLES = `
   html { scroll-behavior: smooth; }
 `;
 
+// ── Фоновый музыкальный плеер (YouTube iframe API) ──
+function MusicPlayer() {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
+
+  const toggle = () => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    if (!started) {
+      // первый запуск
+      iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
+      setStarted(true);
+      setPlaying(true);
+    } else {
+      const msg = playing
+        ? '{"event":"command","func":"pauseVideo","args":""}'
+        : '{"event":"command","func":"playVideo","args":""}';
+      iframe.contentWindow?.postMessage(msg, '*');
+      setPlaying(!playing);
+    }
+  };
+
+  return (
+    <>
+      {/* Скрытый iframe YouTube */}
+      <iframe
+        ref={iframeRef}
+        src="https://www.youtube.com/embed/videoseries?list=PLSearch&enablejsapi=1&autoplay=0&loop=1&controls=0&iv_load_policy=3&modestbranding=1&rel=0&origin=https://poehali.dev&listType=search&list=матранг+заманчивая"
+        style={{ display: 'none' }}
+        allow="autoplay"
+        title="music"
+      />
+      {/* Кнопка */}
+      <button
+        onClick={toggle}
+        title={playing ? 'Пауза' : 'Играть'}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 9999,
+          width: '48px',
+          height: '48px',
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.25)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '20px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          transition: 'transform 0.2s, background 0.2s',
+        }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.1)'}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1)'}
+      >
+        {playing ? '⏸' : '▶️'}
+      </button>
+    </>
+  );
+}
+
 type Screen = 'hero' | 'letter' | 'invite';
 
 export default function Index() {
@@ -534,6 +600,7 @@ export default function Index() {
   return (
     <>
       <style>{STYLES}</style>
+      <MusicPlayer />
       <div ref={topRef}>
         {screen === 'hero' && <HeroScreen onRead={() => goTo('letter')} />}
         {screen === 'letter' && <LetterScreen onInvite={() => goTo('invite')} />}
