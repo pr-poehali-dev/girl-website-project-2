@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 const SEA_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/156b9e86-9a69-47b2-9a98-c02d716abc79.jpg';
-const HERO_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/bucket/8a606346-8b27-4703-8122-210187e72d29.png';
+const HERO_IMG = 'https://cdn.poehali.dev/projects/df45a024-27f3-40de-a783-40db88f9c1e6/files/d4d363dd-214a-4c59-aadf-9ac3431258ff.jpg';
 
 // Целевая дата встречи: 21 мая 2026, 20:30
 const TARGET_DATE = new Date('2026-05-21T20:30:00');
